@@ -7,6 +7,10 @@
 </head>
 
 <body>
-  <h1>#(title)</h1>
+  <h2>#(title)</h2>
+  <form method="post" action="/send">
+  <p>Текст: <input type="text" name="text" /></p>
+  <button type="submit">Надіслати</button>
+  </form>
 </body>
 </html>

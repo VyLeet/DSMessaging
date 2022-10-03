@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Список повідомлень</title>
+</head>
+
+<body>
+  <h2>Список повідомлень:</h2>
+  <ol>
+    #for(message in messages): <li>#(message.text)</li> #endfor
+  </ol>
+</body>
+</html>
