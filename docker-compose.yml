@@ -19,7 +19,7 @@ x-shared_environment: &shared_environment
   
 services:
   app:
-    image: :latest
+    image: latest
     build:
       context: .
     environment:

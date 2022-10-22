@@ -18,15 +18,20 @@ func routes(_ app: Application) throws {
         try await req.view.render("list", ["messages": messages])
     }
     
-    app.post("send") { req async throws in
+    app.post("send") { req async throws -> Response in
         guard let message = try? req.content.decode(Message.self) else {
             return req.redirect(to: "/")
         }
         
         messages.append(message)
         
-        try await _ = req.client.post(URI(stringLiteral: SecondaryServer.s2.rawValue + "/send"),
-                                      content: message)
+        Task {
+            var acknowledgements = [SecondaryServer: Bool]()
+            SecondaryServer.allCases.forEach { acknowledgements[$0] = false }
+            
+            try _ = await req.client.post(URI(stringLiteral: SecondaryServer.s2.rawValue + "/send"),
+                                          content: message)
+        }
         
         return req.redirect(to: "list")
     }
