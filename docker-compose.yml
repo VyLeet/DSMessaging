@@ -27,6 +27,7 @@ services:
       context: .
     environment:
       <<: *shared_environment
+      ROLE: master
     ports:
       - '8080:8080'
     # user: '0' # uncomment to run as root for testing purposes even though Dockerfile defines 'vapor' user.
@@ -42,6 +43,7 @@ services:
       context: .
     environment:
       <<: *shared_environment
+      ROLE: secondary
     ports:
       - '8085:8080'
     # user: '0' # uncomment to run as root for testing purposes even though Dockerfile defines 'vapor' user.
@@ -57,6 +59,7 @@ services:
       context: .
     environment:
       <<: *shared_environment
+      ROLE: secondary
     ports:
       - '8086:8080'
     # user: '0' # uncomment to run as root for testing purposes even though Dockerfile defines 'vapor' user.
@@ -72,6 +75,7 @@ services:
       context: .
     environment:
       <<: *shared_environment
+      ROLE: secondary
     ports:
       - '8087:8080'
     # user: '0' # uncomment to run as root for testing purposes even though Dockerfile defines 'vapor' user.

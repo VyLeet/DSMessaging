@@ -1,38 +1,40 @@
 import Vapor
 
-var messages = [Message]()
-
-enum SecondaryServer: String, CaseIterable {
-    case s2 = "http://secondary-app-1:8080"
-    case s3 = "http://secondary-app-2:8080"
-    
-    static var allCases: [SecondaryServer] = [.s2, .s3]
-}
-
 func routes(_ app: Application) throws {
     app.get { req async throws in
-        try await req.view.render("index", ["title": "Введіть повідомлення:"])
+        try await req.view.render("index")
     }
     
     app.get("list") { req async throws in
-        try await req.view.render("list", ["messages": messages])
+        try await req.view.render("list", ["messages": Message.log])
     }
     
     app.post("send") { req async throws -> Response in
-        guard let message = try? req.content.decode(Message.self) else {
+        guard let message = try? req.content.decode(Message.self),
+              !message.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !Message.log.contains(where: { $0.id == message.id })
+        else {
             return req.redirect(to: "/")
         }
         
-        messages.append(message)
+        Message.log.append(message)
         
-        Task {
-            var acknowledgements = [SecondaryServer: Bool]()
-            SecondaryServer.allCases.forEach { acknowledgements[$0] = false }
-            
-            try _ = await req.client.post(URI(stringLiteral: SecondaryServer.s2.rawValue + "/send"),
-                                          content: message)
+        if Environment.isMaster {
+            Task {
+                for secondaryServer in SecondaryServer.allCases {
+                    let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
+                    let clientResponse = try await req.client.post(uri, content: message)
+                    if clientResponse.status != .ok {
+                        sleep(UInt32.max)
+                    }
+                }
+            }
+        } else {
+            do {
+                sleep(1)
+            }
         }
         
-        return req.redirect(to: "list")
+        return req.redirect(to: "/list")
     }
 }

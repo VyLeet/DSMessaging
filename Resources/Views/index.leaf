@@ -1,16 +1,68 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-
-  <title>#(title)</title>
+    <meta charset="utf-8">
+    <title>Головна</title>
+    <style>
+        html, body {
+            background: rgb(97,144,232);
+            background: linear-gradient(90deg, rgba(97,144,232,1) 2%, rgba(167,191,232,1) 38%);
+            width: 100%;
+            height:75%;
+        }
+        
+        p {
+            color: black;
+        }
+        
+        input {
+            background-color: white;
+            color: black;
+            min-width: 200px;
+            width: 25%;
+            line-height: 35px;
+            text-align: center;
+            font-size: 24px;
+            border-radius: 12px;
+        }
+        
+        .listButton {
+            text-align: left;
+            margin-right: 10px;
+        }
+        
+        .inputForm {
+            margin-top: 20%;
+            text-align: center;
+        }
+        
+        button {
+            height: 40px;
+            border-radius: 7px;
+            text-align: center;
+            background-color: black;
+            color: white;
+            font-size: 15px;
+        }
+    </style>
 </head>
 
 <body>
-  <h2>#(title)</h2>
-  <form method="post" action="/send">
-  <p>Текст: <input type="text" name="text" /></p>
-  <button type="submit">Надіслати</button>
-  </form>
+    <div class="listButton">
+        <form method="get" action="/list">
+            <button type="submit">Список</button>
+        </form>
+    </div>
+    
+    <div class="inputForm">
+        <form method="post" action="/send">
+            <input type="text"
+                name="text"
+                placeholder="пиши сюди"
+            />
+            
+            <button type="submit">🚀</button>
+        </form>
+    </div>
 </body>
 </html>

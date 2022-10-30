@@ -1,0 +1,40 @@
+html, body {
+    background: rgb(97,144,232);
+    background: linear-gradient(90deg, rgba(97,144,232,1) 2%, rgba(167,191,232,1) 38%);
+    width: 100%;
+    height:75%;
+}
+
+p {
+    color: black;
+}
+
+input {
+    background-color: white;
+    color: black;
+    min-width: 200px;
+    width: 25%;
+    line-height: 35px;
+    text-align: center;
+    font-size: 24px;
+    border-radius: 12px;
+}
+
+.listButton {
+    text-align: left;
+    margin-right: 10px;
+}
+
+.inputForm {
+    margin-top: 20%;
+    text-align: center;
+}
+
+button {
+    height: 40px;
+    border-radius: 7px;
+    text-align: center;
+    background-color: black;
+    color: white;
+    font-size: 15px;
+}
