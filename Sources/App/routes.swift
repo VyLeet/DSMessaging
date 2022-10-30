@@ -1,8 +1,12 @@
 import Vapor
 
 func routes(_ app: Application) throws {
-    app.get { req async throws in
-        try await req.view.render("index")
+    app.get { req async throws -> Response in
+        if Environment.isMaster {
+            return try await req.view.render("index").encodeResponse(for: req)
+        } else {
+            return req.redirect(to: "/list")
+        }
     }
     
     app.get("list") { req async throws in
@@ -20,21 +24,22 @@ func routes(_ app: Application) throws {
         Message.log.append(message)
         
         if Environment.isMaster {
-            Task {
-                for secondaryServer in SecondaryServer.allCases {
-                    let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
-                    let clientResponse = try await req.client.post(uri, content: message)
-                    if clientResponse.status != .ok {
-                        sleep(UInt32.max)
-                    }
+            for secondaryServer in SecondaryServer.allCases {
+                let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
+                let clientResponse = try await req.client.post(uri, content: message)
+                if clientResponse.status != .ok {
+                    return req.redirect(to: "/fail")
                 }
             }
+            
+            return req.redirect(to: "/list")
+            
         } else {
             do {
-                sleep(1)
+                sleep(3)
+                
+                return req.redirect(to: "/list")
             }
         }
-        
-        return req.redirect(to: "/list")
     }
 }
