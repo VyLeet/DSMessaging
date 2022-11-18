@@ -24,19 +24,24 @@ func routes(_ app: Application) throws {
         Message.log.append(message)
         
         if Environment.isMaster {
-            for secondaryServer in SecondaryServer.allCases {
+            var statuses: [MessagingServer: HTTPStatus?] = [
+                .master: .ok
+            ]
+            
+            for secondaryServer in MessagingServer.secondaryServers {
                 let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
                 let clientResponse = try await req.client.post(uri, content: message)
-                if clientResponse.status != .ok {
-                    return req.redirect(to: "/fail")
-                }
+                statuses[secondaryServer] = clientResponse.status
             }
             
-            return req.redirect(to: "/list")
+            let finalStatus: HTTPStatus = Environment.writeConcern.canReturnOK(withStatuses: statuses)
+            ? .ok
+            : .internalServerError
             
+            return Response(status: finalStatus)
         } else {
             do {
-                sleep(3)
+                sleep(1)
                 
                 return req.redirect(to: "/list")
             }

@@ -9,4 +9,6 @@ import Vapor
 
 extension Environment {
     static var isMaster = Environment.get("ROLE") == "master"
+    
+    static let writeConcern = WriteConcern.allCases.randomElement()!
 }
