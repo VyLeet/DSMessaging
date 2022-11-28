@@ -34,11 +34,11 @@ func routes(_ app: Application) throws {
                 statuses[secondaryServer] = clientResponse.status
             }
             
-            let finalStatus: HTTPStatus = Environment.writeConcern.canReturnOK(withStatuses: statuses)
-            ? .ok
-            : .internalServerError
-            
-            return Response(status: finalStatus)
+            if Environment.writeConcern.canReturnOK(withStatuses: statuses) {
+                return req.redirect(to: "/list")
+            } else {
+                return req.redirect(to: "/fail")
+            }
         } else {
             do {
                 sleep(1)
