@@ -28,10 +28,18 @@ func routes(_ app: Application) throws {
                 .master: .ok
             ]
             
-            for secondaryServer in MessagingServer.secondaryServers {
-                let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
-                let clientResponse = try await req.client.post(uri, content: message)
-                statuses[secondaryServer] = clientResponse.status
+            try? await withThrowingTaskGroup(of: (server: MessagingServer, status: HTTPStatus).self) { group in
+                for secondaryServer in MessagingServer.secondaryServers {
+                    group.addTask {
+                        let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
+                        let clientResponse = try? await req.client.post(uri, content: message)
+                        return (secondaryServer, clientResponse?.status ?? .requestTimeout)
+                    }
+                }
+                
+                for try await entry in group {
+                    statuses[entry.server] = entry.status
+                }
             }
             
             if Environment.writeConcern.canReturnOK(withStatuses: statuses) {
