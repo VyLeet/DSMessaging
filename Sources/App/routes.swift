@@ -28,6 +28,8 @@ func routes(_ app: Application) throws {
                 .master: .ok
             ]
             
+            var canReturnOK = false
+            
             try? await withThrowingTaskGroup(of: (server: MessagingServer, status: HTTPStatus).self) { group in
                 for secondaryServer in MessagingServer.secondaryServers {
                     group.addTask {
@@ -39,14 +41,16 @@ func routes(_ app: Application) throws {
                 
                 for try await entry in group {
                     statuses[entry.server] = entry.status
+                    
+                    if Environment.writeConcern.canReturnOK(withStatuses: statuses) {
+                        canReturnOK = true
+                        group.cancelAll()
+                        break
+                    }
                 }
             }
             
-            if Environment.writeConcern.canReturnOK(withStatuses: statuses) {
-                return req.redirect(to: "/list")
-            } else {
-                return req.redirect(to: "/fail")
-            }
+            return canReturnOK ? req.redirect(to: "/list") : req.redirect(to: "/fail")
         } else {
             do {
                 sleep(1)
