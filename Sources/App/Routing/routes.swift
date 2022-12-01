@@ -5,7 +5,7 @@ func routes(_ app: Application) throws {
         if Environment.isMaster {
             return try await req.view.render("index").encodeResponse(for: req)
         } else {
-            return req.redirect(to: "/list")
+            return req.redirect(to: PathParameter.list.rawValue)
         }
     }
     
@@ -15,17 +15,21 @@ func routes(_ app: Application) throws {
     
     app.post("send") { req async throws -> Response in
         guard let message = try? req.content.decode(Message.self) else {
-            return req.redirect(to: "/")
+            return req.redirect(to: PathParameter.home.rawValue)
         }
         
         if Environment.isMaster {
             guard let concernNumber = req.query[Int.self, at: "writeconcern"],
                   let writeConcern = WriteConcern(rawValue: concernNumber)
             else {
-                return req.redirect(to: "/")
+                return req.redirect(to: PathParameter.home.rawValue)
             }
             
-            Message.log(message)
+            do {
+                try Message.log(message)
+            } catch {
+                return req.redirect(to: PathParameter.home.rawValue)
+            }
             
             var statuses: [MessagingServer: HTTPStatus?] = [
                 .master: .ok
@@ -36,7 +40,7 @@ func routes(_ app: Application) throws {
             try? await withThrowingTaskGroup(of: (server: MessagingServer, status: HTTPStatus).self) { group in
                 for secondaryServer in MessagingServer.secondaryServers {
                     group.addTask {
-                        let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
+                        let uri = URI(stringLiteral: secondaryServer.urlString + PathParameter.send.rawValue)
                         let clientResponse = try? await req.client.post(uri, content: message)
                         return (secondaryServer, clientResponse?.status ?? .requestTimeout)
                     }
@@ -53,13 +57,17 @@ func routes(_ app: Application) throws {
                 }
             }
             
-            return canReturnOK ? req.redirect(to: "/list") : req.redirect(to: "/fail")
+            return req.redirect(to: (canReturnOK ? PathParameter.list : .fail).rawValue)
         } else {
             do {
                 sleep(.random(in: 1...15))
                 
-                Message.log(message)
-                return req.redirect(to: "/list")
+                do {
+                    try Message.log(message)
+                    return Response(status: .ok)
+                } catch {
+                    return Response(status: .preconditionFailed)
+                }
             }
         }
     }
