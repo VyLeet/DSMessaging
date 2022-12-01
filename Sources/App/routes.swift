@@ -21,9 +21,10 @@ func routes(_ app: Application) throws {
             return req.redirect(to: "/")
         }
         
-        Message.log(message)
         
         if Environment.isMaster {
+            Message.log(message)
+
             var statuses: [MessagingServer: HTTPStatus?] = [
                 .master: .ok
             ]
@@ -32,6 +33,11 @@ func routes(_ app: Application) throws {
             
             try? await withThrowingTaskGroup(of: (server: MessagingServer, status: HTTPStatus).self) { group in
                 for secondaryServer in MessagingServer.secondaryServers {
+                    group.addTask {
+                        let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
+                        let clientResponse = try? await req.client.post(uri, content: message)
+                        return (secondaryServer, clientResponse?.status ?? .requestTimeout)
+                    }
                     group.addTask {
                         let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
                         let clientResponse = try? await req.client.post(uri, content: message)
@@ -53,8 +59,9 @@ func routes(_ app: Application) throws {
             return canReturnOK ? req.redirect(to: "/list") : req.redirect(to: "/fail")
         } else {
             do {
-                sleep(1)
+                sleep(.random(in: 1..<60))
                 
+                Message.log(message)
                 return req.redirect(to: "/list")
             }
         }
