@@ -14,7 +14,7 @@ struct Message: Content, Identifiable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.text = try container.decode(String.self, forKey: .text)
-        self.id = (try? container.decode(Int.self, forKey: .id)) ?? 1
+        self.id = (try? container.decode(Int.self, forKey: .id)) ?? (Self.list.last?.id ?? 0).advanced(by: 1)
     }
     
     static private(set) var list = [Message]()
