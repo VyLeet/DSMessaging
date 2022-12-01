@@ -37,7 +37,7 @@ extension Message {
         self.listLock.lock()
         defer { self.listLock.unlock() }
         
-        guard false == self.list.contains(where: { $0.id == message.id }) else {
+        guard !self.list.contains(where: { $0.id == message.id }) else {
             return
         }
         

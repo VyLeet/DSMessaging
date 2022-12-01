@@ -14,13 +14,9 @@ func routes(_ app: Application) throws {
     }
     
     app.post("send") { req async throws -> Response in
-        guard let message = try? req.content.decode(Message.self),
-              !message.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              !Message.list.contains(where: { $0.id == message.id })
-        else {
+        guard let message = try? req.content.decode(Message.self) else {
             return req.redirect(to: "/")
         }
-        
         
         if Environment.isMaster {
             Message.log(message)
@@ -33,11 +29,6 @@ func routes(_ app: Application) throws {
             
             try? await withThrowingTaskGroup(of: (server: MessagingServer, status: HTTPStatus).self) { group in
                 for secondaryServer in MessagingServer.secondaryServers {
-                    group.addTask {
-                        let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
-                        let clientResponse = try? await req.client.post(uri, content: message)
-                        return (secondaryServer, clientResponse?.status ?? .requestTimeout)
-                    }
                     group.addTask {
                         let uri = URI(stringLiteral: secondaryServer.urlString + "/send")
                         let clientResponse = try? await req.client.post(uri, content: message)
@@ -59,7 +50,7 @@ func routes(_ app: Application) throws {
             return canReturnOK ? req.redirect(to: "/list") : req.redirect(to: "/fail")
         } else {
             do {
-                sleep(.random(in: 1..<60))
+                sleep(.random(in: 1...15))
                 
                 Message.log(message)
                 return req.redirect(to: "/list")
