@@ -9,7 +9,15 @@ p {
     color: black;
 }
 
-input {
+.radioContainer {
+    background-color: white;
+    color: black;
+    text-align: center;
+    margin: 10px;
+    line-height: 35px;
+}
+
+.textInput {
     background-color: white;
     color: black;
     min-width: 200px;

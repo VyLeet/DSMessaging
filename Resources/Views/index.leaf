@@ -15,7 +15,15 @@
             color: black;
         }
         
-        input {
+        .radioContainer {
+            color: black;
+            text-align: center;
+            margin: 10px;
+            line-height: 35px;
+            font-size: 20px;
+        }
+
+        .textInput {
             background-color: white;
             color: black;
             min-width: 200px;
@@ -55,14 +63,34 @@
     </div>
     
     <div class="inputForm">
-        <form method="post" action="/send?writeconcern=2">
+        <div class="radioContainer">
+            <input type="radio" id="onlyMaster" name="writeconcern" value="0" checked>
+            <label for="onlyMaster">Only master</label><br>
+            <input type="radio" id="masterAndOneSecondary" name="writeconcern" value="1">
+            <label for="masterAndOneSecondary">Master and one secondary</label><br>
+            <input type="radio" id="masterAndTwoSecondaries" name="writeconcern" value="2">
+            <label for="masterAndTwoSecondaries">Master and two secondaries</label>
+        </div>
+        <form id="submitForm" method="post" action="/send?writeconcern=0">
             <input type="text"
                 name="text"
+                class="textInput"
                 placeholder="пиши сюди"
             />
             
             <button type="submit">🚀</button>
         </form>
     </div>
+
+    <script>
+        var form = document.getElementById("submitForm");
+        document.querySelectorAll('input[name="writeconcern"]').forEach((elem) => {
+            elem.addEventListener("change", function(event) {
+                var urlTemplate = "/send?writeconcern=";
+
+                form.action = urlTemplate + this.value;
+            });
+        });   
+    </script>
 </body>
 </html>
