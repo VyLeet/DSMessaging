@@ -14,8 +14,12 @@ struct Message: Content, Identifiable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.text = try container.decode(String.self, forKey: .text)
-        self.id = (try? container.decode(Int.self, forKey: .id)) ?? (Self.log.last?.id ?? 0).advanced(by: 1)
+        self.id = (try? container.decode(Int.self, forKey: .id)) ?? 1
     }
     
-    static var log = [Message]()
+    static private(set) var list = [Message]()
+    
+    static func log(_ message: Message) {
+        list.append(message)
+    }
 }

@@ -10,18 +10,18 @@ func routes(_ app: Application) throws {
     }
     
     app.get("list") { req async throws in
-        try await req.view.render("list", ["messages": Message.log])
+        try await req.view.render("list", ["messages": Message.list])
     }
     
     app.post("send") { req async throws -> Response in
         guard let message = try? req.content.decode(Message.self),
               !message.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              !Message.log.contains(where: { $0.id == message.id })
+              !Message.list.contains(where: { $0.id == message.id })
         else {
             return req.redirect(to: "/")
         }
         
-        Message.log.append(message)
+        Message.log(message)
         
         if Environment.isMaster {
             var statuses: [MessagingServer: HTTPStatus?] = [
