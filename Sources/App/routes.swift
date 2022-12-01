@@ -19,8 +19,14 @@ func routes(_ app: Application) throws {
         }
         
         if Environment.isMaster {
+            guard let concernNumber = req.query[Int.self, at: "writeconcern"],
+                  let writeConcern = WriteConcern(rawValue: concernNumber)
+            else {
+                return req.redirect(to: "/")
+            }
+            
             Message.log(message)
-
+            
             var statuses: [MessagingServer: HTTPStatus?] = [
                 .master: .ok
             ]
@@ -39,7 +45,7 @@ func routes(_ app: Application) throws {
                 for try await entry in group {
                     statuses[entry.server] = entry.status
                     
-                    if Environment.writeConcern.canReturnOK(withStatuses: statuses) {
+                    if writeConcern.canReturnOK(withStatuses: statuses) {
                         canReturnOK = true
                         group.cancelAll()
                         break
