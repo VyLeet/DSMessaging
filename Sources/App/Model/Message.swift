@@ -32,13 +32,13 @@ extension Message {
         self.counter += 1
         return counter
     }
-
-    static func log(_ message: Message) {
+    
+    static func log(_ message: Message) throws {
         self.listLock.lock()
         defer { self.listLock.unlock() }
         
         guard !self.list.contains(where: { $0.id == message.id }) else {
-            return
+            throw LoggingError.alreadyLogged
         }
         
         self.list.append(message)
@@ -46,5 +46,9 @@ extension Message {
         if self.list.count >= 2 && self.list[list.count - 1].id < self.list[list.count - 2].id {
             self.list.sort { $0.id < $1.id }
         }
+    }
+    
+    enum LoggingError: Error {
+        case alreadyLogged
     }
 }
