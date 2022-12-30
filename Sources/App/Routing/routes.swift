@@ -13,6 +13,10 @@ func routes(_ app: Application) throws {
         try await req.view.render("list", ["messages": Message.list])
     }
     
+    app.get("health") { req async throws -> Response in
+        return Response(status: .ok)
+    }
+    
     app.post("send") { req async throws -> Response in
         guard let message = try? req.content.decode(Message.self) else {
             return req.redirect(to: PathParameter.home.rawValue)
