@@ -10,7 +10,23 @@ func routes(_ app: Application) throws {
     }
     
     app.get("list") { req async throws in
-        try await req.view.render("list", ["messages": Message.list])
+        if Environment.isMaster {
+            try await req.view.render("list", ["messages": Message.list])
+        } else {
+            let messages = Message.list
+            let response = [Message]()
+            let lastMessageId = 0
+            for message in messages {
+                if message.id - lastMessageId < 2 {
+                    response.append(message)
+                    lastMessageId = message.id
+                } else {
+                    break
+                }
+            }
+            try await req.view.render("list", ["messages": response])
+        }
+
     }
     
     app.get("health") { req async throws -> Response in
@@ -69,6 +85,9 @@ func routes(_ app: Application) throws {
         } else {
             do {
                 sleep(.random(in: 1...15))
+                if .random(in: 1...10) == 1 {
+                    throw new RuntimeException("Randomly throwed error")
+                }
                 
                 do {
                     try Message.log(message)
