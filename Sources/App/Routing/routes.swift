@@ -9,13 +9,13 @@ func routes(_ app: Application) throws {
         }
     }
     
-    app.get("list") { req async throws in
+    app.get("list") { req async throws -> View in
         if Environment.isMaster {
-            try await req.view.render("list", ["messages": Message.list])
+            return try await req.view.render("list", ["messages": Message.list])
         } else {
             let messages = Message.list
-            let response = [Message]()
-            let lastMessageId = 0
+            var response = [Message]()
+            var lastMessageId = 0
             for message in messages {
                 if message.id - lastMessageId < 2 {
                     response.append(message)
@@ -24,7 +24,7 @@ func routes(_ app: Application) throws {
                     break
                 }
             }
-            try await req.view.render("list", ["messages": response])
+            return try await req.view.render("list", ["messages": response])
         }
 
     }
@@ -61,11 +61,13 @@ func routes(_ app: Application) throws {
                 for secondaryServer in MessagingServer.secondaryServers {
                     group.addTask {
                         let uri = URI(stringLiteral: secondaryServer.urlString + PathParameter.send.rawValue)
-                        let retries = 0
+                        var retries = 0
+                        var clientResponse: ClientResponse?
                         repeat {
-                            let clientResponse = try? await req.client.post(uri, content: message)
-                            sleep(2^retries)
-                        } while clientResponse?.statusCode != 200 && clientResponse?.statusCode != 409 && retries <= MessagingServer.maxRetries
+                            clientResponse = try? await req.client.post(uri, content: message)
+                            sleep(UInt32(pow(Double(2), Double(retries))))
+                            retries += 1
+                        } while clientResponse?.status != .ok && clientResponse?.status != .conflict && retries <= MessagingServer.maxRetries
                         return (secondaryServer, clientResponse?.status ?? .requestTimeout)
                     }
                 }
@@ -86,7 +88,7 @@ func routes(_ app: Application) throws {
             do {
                 sleep(.random(in: 1...15))
                 if .random(in: 1...10) == 1 {
-                    throw new RuntimeException("Randomly throwed error")
+                    throw ErrorMock.randomError
                 }
                 
                 do {

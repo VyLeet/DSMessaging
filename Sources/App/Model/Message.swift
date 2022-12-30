@@ -47,8 +47,12 @@ extension Message {
             self.list.sort { $0.id < $1.id }
         }
     }
+}
     
-    enum LoggingError: Error {
-        case alreadyLogged
-    }
+enum LoggingError: Error {
+    case alreadyLogged
+}
+
+enum ErrorMock: Error {
+    case randomError
 }
