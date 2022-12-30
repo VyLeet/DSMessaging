@@ -49,7 +49,7 @@ func routes(_ app: Application) throws {
                         repeat {
                             let clientResponse = try? await req.client.post(uri, content: message)
                             sleep(2^retries)
-                        } while clientResponse?.statusCode != 200 && retries <= MessagingServer.maxRetries
+                        } while clientResponse?.statusCode != 200 && clientResponse?.statusCode != 409 && retries <= MessagingServer.maxRetries
                         return (secondaryServer, clientResponse?.status ?? .requestTimeout)
                     }
                 }
@@ -73,6 +73,8 @@ func routes(_ app: Application) throws {
                 do {
                     try Message.log(message)
                     return Response(status: .ok)
+                } catch LoggingError.alreadyLogged {
+                    return Response(status: .conflict)
                 } catch {
                     return Response(status: .preconditionFailed)
                 }
