@@ -41,7 +41,11 @@ func routes(_ app: Application) throws {
                 for secondaryServer in MessagingServer.secondaryServers {
                     group.addTask {
                         let uri = URI(stringLiteral: secondaryServer.urlString + PathParameter.send.rawValue)
-                        let clientResponse = try? await req.client.post(uri, content: message)
+                        let retries = 0
+                        repeat {
+                            let clientResponse = try? await req.client.post(uri, content: message)
+                            sleep(2^retries)
+                        } while clientResponse?.statusCode != 200 && retries <= MessagingServer.maxRetries
                         return (secondaryServer, clientResponse?.status ?? .requestTimeout)
                     }
                 }
