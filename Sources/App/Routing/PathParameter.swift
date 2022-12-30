@@ -8,8 +8,9 @@
 import Vapor
 
 enum PathParameter: String {
-    case home = "/"
-    case list = "/list"
-    case fail = "/fail"
-    case send = "/send"
+    case home   = "/"
+    case list   = "/list"
+    case fail   = "/fail"
+    case health = "/health"
+    case send   = "/send"
 }
