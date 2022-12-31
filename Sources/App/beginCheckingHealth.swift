@@ -11,9 +11,14 @@ import Vapor
 func beginCheckingHealth() {
     let keyValuePairs = MessagingServer.secondaryServers.map { ($0.rawValue, 0)}
     var consecutiveHealthCheckFails = Dictionary(uniqueKeysWithValues: keyValuePairs)
+    var lastCheckSecond = 0
     
     while true {
-        if Calendar.current.component(.second, from: Date()) % 10 == 1 {
+        let currentSecond = Calendar.current.component(.second, from: Date())
+        
+        if currentSecond % 10 == 1 && currentSecond != lastCheckSecond {
+            lastCheckSecond = currentSecond
+            
             for secondaryServer in MessagingServer.secondaryServers {
                 Task.detached(priority: .background) {
                     guard let url = URL(string: secondaryServer.urlString + PathParameter.health.rawValue) else { return }
